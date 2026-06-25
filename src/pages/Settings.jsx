@@ -4,7 +4,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useTheme } from '../hooks/useTheme';
 import { 
   User, Bell, Shield, Sun, Moon, Save, 
-  KeyRound, CheckCircle2, ShieldCheck, Lock, Info
+  KeyRound, CheckCircle2, ShieldCheck, Lock, Info, Image, Palette, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,6 +16,15 @@ export const Settings = () => {
   // Active tab state: 'profile' | 'notifications' | 'security' | 'appearance'
   const [activeTab, setActiveTab] = useState('profile');
 
+  // Avatar Selection Presets
+  const AVATAR_OPTIONS = [
+    { id: 'avatar1', url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300", label: "Female Physician 1" },
+    { id: 'avatar2', url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300", label: "Male Physician 1" },
+    { id: 'avatar3', url: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=300", label: "Female Physician 2" },
+    { id: 'avatar4', url: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300", label: "Male Physician 2" },
+    { id: 'avatar5', url: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=300", label: "Male Physician 3" },
+  ];
+
   // 1. Profile States
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,6 +32,17 @@ export const Settings = () => {
   const [hospital, setHospital] = useState('');
   const [location, setLocation] = useState('');
   const [bio, setBio] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
+
+  // 1b. Customization States (Theme & Visibility Toggles)
+  const [coverTheme, setCoverTheme] = useState('teal');
+  const [visibleSections, setVisibleSections] = useState({
+    skills: true,
+    achievements: true,
+    credentials: true,
+    education: true,
+    research: true
+  });
 
   // 2. Notification States
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -44,15 +64,16 @@ export const Settings = () => {
       setHospital(user.hospital || '');
       setLocation(user.location || '');
       setBio(user.bio || '');
+      setEditAvatar(user.avatar || '');
     }
   }, [user]);
 
   // Load other configurations from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('mednova_platform_settings');
-    if (saved) {
+    const savedSettings = localStorage.getItem('mednova_platform_settings');
+    if (savedSettings) {
       try {
-        const config = JSON.parse(saved);
+        const config = JSON.parse(savedSettings);
         setEmailAlerts(config.emailAlerts ?? true);
         setPushNotifs(config.pushNotifs ?? true);
         setDigestWeekly(config.digestWeekly ?? false);
@@ -60,6 +81,23 @@ export const Settings = () => {
         setNpiLookup(config.npiLookup ?? true);
       } catch (e) {
         console.error("Failed to parse settings configurations", e);
+      }
+    }
+
+    const savedCustomization = localStorage.getItem('mednova_profile_customization');
+    if (savedCustomization) {
+      try {
+        const parsed = JSON.parse(savedCustomization);
+        setCoverTheme(parsed.coverTheme || 'teal');
+        setVisibleSections(parsed.visibleSections || {
+          skills: true,
+          achievements: true,
+          credentials: true,
+          education: true,
+          research: true
+        });
+      } catch (e) {
+        console.error("Failed to parse profile customization in settings", e);
       }
     }
   }, []);
@@ -75,8 +113,25 @@ export const Settings = () => {
         specialty,
         hospital,
         location,
-        bio
+        bio,
+        avatar: editAvatar
       });
+
+      // Save customization
+      const savedCustomization = localStorage.getItem('mednova_profile_customization');
+      let customObj = {};
+      if (savedCustomization) {
+        try {
+          customObj = JSON.parse(savedCustomization);
+        } catch {}
+      }
+      const updatedCustomization = {
+        ...customObj,
+        coverTheme,
+        visibleSections
+      };
+      localStorage.setItem('mednova_profile_customization', JSON.stringify(updatedCustomization));
+
       addNotification(
         "Profile Settings Saved",
         "Clinical metadata and contact information synced successfully.",
@@ -210,7 +265,7 @@ export const Settings = () => {
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-350 focus:outline-none focus:border-medical-teal"
+                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-355 focus:outline-none focus:border-medical-teal"
                       />
                     </div>
                     <div className="space-y-1">
@@ -220,7 +275,7 @@ export const Settings = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-350 focus:outline-none focus:border-medical-teal"
+                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-355 focus:outline-none focus:border-medical-teal"
                       />
                     </div>
                   </div>
@@ -233,7 +288,7 @@ export const Settings = () => {
                         required
                         value={specialty}
                         onChange={(e) => setSpecialty(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-350 focus:outline-none focus:border-medical-teal"
+                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-355 focus:outline-none focus:border-medical-teal"
                       />
                     </div>
                     <div className="space-y-1">
@@ -243,7 +298,7 @@ export const Settings = () => {
                         required
                         value={hospital}
                         onChange={(e) => setHospital(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-350 focus:outline-none focus:border-medical-teal"
+                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-355 focus:outline-none focus:border-medical-teal"
                       />
                     </div>
                   </div>
@@ -267,6 +322,134 @@ export const Settings = () => {
                       onChange={(e) => setBio(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-350 focus:outline-none focus:border-medical-teal resize-none leading-relaxed"
                     />
+                  </div>
+
+                  {/* 1. Avatar selection */}
+                  <div className="space-y-3 border-t border-slate-100 dark:border-dark-border/40 pt-4">
+                    <label className="text-xs text-slate-550 dark:text-slate-400 font-bold block flex items-center gap-1.5">
+                      <Image className="w-4 h-4 text-medical-teal" />
+                      Change Profile Avatar
+                    </label>
+                    <div className="flex flex-wrap gap-3 items-center">
+                      {AVATAR_OPTIONS.map((opt) => (
+                        <button
+                          type="button"
+                          key={opt.id}
+                          onClick={() => setEditAvatar(opt.url)}
+                          className={`relative w-12 h-12 rounded-full overflow-hidden border-2 cursor-pointer transition-all ${
+                            editAvatar === opt.url 
+                              ? 'border-medical-teal scale-110 shadow-md shadow-medical-teal/20' 
+                              : 'border-slate-200 dark:border-slate-700 hover:scale-105'
+                          }`}
+                        >
+                          <img src={opt.url} alt={opt.label} className="w-full h-full object-cover" />
+                          {editAvatar === opt.url && (
+                            <div className="absolute inset-0 bg-medical-teal/20 flex items-center justify-center">
+                              <span className="w-2 h-2 rounded-full bg-white" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-550 block">Or paste a custom image URL:</span>
+                      <input 
+                        type="text"
+                        value={editAvatar}
+                        onChange={(e) => setEditAvatar(e.target.value)}
+                        placeholder="https://example.com/your-image.jpg"
+                        className="w-full bg-slate-50 dark:bg-[#080d16] border border-slate-250 dark:border-dark-border rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-medical-teal"
+                      />
+                    </div>
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100/50 dark:border-dark-border/20">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-550 block font-semibold">Or upload a photo file:</span>
+                      <input 
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            if (file.size > 1.5 * 1024 * 1024) {
+                              alert("Please upload an image smaller than 1.5MB to ensure it fits browser storage limits.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setEditAvatar(event.target.result);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-semibold file:bg-medical-teal/10 file:text-medical-teal hover:file:bg-medical-teal/20 transition-all cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. Cover theme styling preset */}
+                  <div className="space-y-3 border-t border-slate-100 dark:border-dark-border/40 pt-4">
+                    <label className="text-xs text-slate-550 dark:text-slate-400 font-bold block flex items-center gap-1.5">
+                      <Palette className="w-4 h-4 text-medical-teal" />
+                      Profile Cover Accent Theme
+                    </label>
+                    <div className="flex gap-4">
+                      {['teal', 'blue', 'indigo', 'emerald', 'purple'].map((key) => {
+                        const colors = {
+                          teal: '#0ea5e9',
+                          blue: '#3b82f6',
+                          indigo: '#6366f1',
+                          emerald: '#10b981',
+                          purple: '#a855f7'
+                        };
+                        return (
+                          <button
+                            type="button"
+                            key={key}
+                            onClick={() => setCoverTheme(key)}
+                            style={{ backgroundColor: colors[key] }}
+                            className={`w-8 h-8 rounded-full border-2 cursor-pointer transition-all relative ${
+                              coverTheme === key 
+                                ? 'border-white scale-115 ring-2 ring-medical-teal shadow-md' 
+                                : 'border-transparent hover:scale-105'
+                            }`}
+                            title={key.charAt(0).toUpperCase() + key.slice(1)}
+                          >
+                            {coverTheme === key && (
+                              <span className="absolute inset-0 m-auto w-1.5 h-1.5 bg-white rounded-full" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3. Section visibility toggles */}
+                  <div className="space-y-3 border-t border-slate-100 dark:border-dark-border/40 pt-4">
+                    <label className="text-xs text-slate-550 dark:text-slate-400 font-bold block flex items-center gap-1.5">
+                      <Eye className="w-4 h-4 text-medical-teal" />
+                      Configure Profile Sections Visibility
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {[
+                        { id: 'skills', label: 'Clinical Skills Cloud' },
+                        { id: 'achievements', label: 'Achievements & Awards' },
+                        { id: 'credentials', label: 'Verified Credentials Vault' },
+                        { id: 'education', label: 'Education Details Timeline' },
+                        { id: 'research', label: 'Research & Publications Portfolio' }
+                      ].map((sec) => (
+                        <label key={sec.id} className="flex items-center justify-between p-3 bg-slate-555/5 dark:bg-[#070b13] border border-slate-150 dark:border-dark-border/40 rounded-2xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900/40 transition-colors">
+                          <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold">{sec.label}</span>
+                          <div className="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input 
+                              type="checkbox"
+                              checked={visibleSections[sec.id]}
+                              onChange={(e) => setVisibleSections(prev => ({ ...prev, [sec.id]: e.target.checked }))}
+                              className="sr-only peer" 
+                            />
+                            <div className="w-8 h-4.5 bg-slate-200 dark:bg-slate-900 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-medical-teal peer-checked:after:bg-white" />
+                          </div>
+                        </label>
+                      ))}
+                    </div>
                   </div>
 
                   <button
